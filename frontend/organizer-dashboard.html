@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizer Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 22px;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-edit:hover {
+            background: #ffb300;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .btn-view {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-view:hover {
+            background: #5568d3;
+        }
+
+        .event-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .event-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .event-details {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .event-details p {
+            margin-bottom: 5px;
+        }
+
+        .event-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #333;
+            font-size: 22px;
+        }
+
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .participants-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .participants-table th,
+        .participants-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .participants-table th {
+            background: #f5f7fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .attendance-toggle {
+            padding: 5px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .present {
+            background: #28a745;
+            color: white;
+        }
+
+        .absent {
+            background: #6c757d;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <h1>Organizer Dashboard</h1>
+    <div class="user-info">
+        <span id="userName">Organizer</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="section">
+        <div class="section-header">
+            <h2>My Events</h2>
+            <button class="btn btn-primary" onclick="openCreateModal()">Create Event</button>
+        </div>
+        <div id="eventsList"></div>
+    </div>
+</div>
+
+<!-- Create/Edit Event Modal -->
+<div id="eventModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Create Event</h2>
+            <span class="close" onclick="closeEventModal()">&times;</span>
+        </div>
+        <form onsubmit="saveEvent(event)">
+            <input type="hidden" id="eventId">
+            <div class="form-group">
+                <label>Event Title</label>
+                <input type="text" id="eventTitle" required>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="eventDescription" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Event Date & Time</label>
+                <input type="text" id="eventDate" placeholder="YYYY-MM-DD HH:MM" required>
+
+            </div>
+            <div class="form-group">
+                <label>Location</label>
+                <input type="text" id="eventLocation" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Save Event</button>
+        </form>
+    </div>
+</div>
+
+<!-- Participants Modal -->
+<div id="participantsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Registered Participants</h2>
+            <span class="close" onclick="closeParticipantsModal()">&times;</span>
+        </div>
+        <div id="participantsList"></div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api';
+    let currentUser = null;
+    let currentEventId = null;
+
+    window.onload = function() {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'ORGANIZER') {
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = user;
+        document.getElementById('userName').textContent = user.name;
+        loadEvents();
+    };
+
+    async function loadEvents() {
+        try {
+            const response = await fetch(`${API_URL}/events/organizer/${currentUser.id}`);
+            const events = await response.json();
+            displayEvents(events);
+        } catch (error) {
+            console.error('Error loading events:', error);
+        }
+    }
+
+    function displayEvents(events) {
+        const container = document.getElementById('eventsList');
+
+        if (events.length === 0) {
+            container.innerHTML = '<div class="empty-state">No events created yet. Create your first event!</div>';
+            return;
+        }
+
+        container.innerHTML = events.map(event => `
+            <div class="event-card">
+                <div class="event-header">
+                    <div>
+                        <div class="event-title">${event.title}</div>
+                    </div>
+                    <span class="event-status status-${event.status.toLowerCase()}">${event.status}</span>
+                </div>
+                <div class="event-details">
+                    <p><strong>Date:</strong> ${new Date(event.eventDate).toLocaleString()}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <p><strong>Description:</strong> ${event.description || 'No description'}</p>
+                </div>
+                <div class="event-actions">
+                    <button class="btn btn-view" onclick="viewParticipants(${event.id})">View Participants</button>
+                    <button class="btn btn-edit" onclick="editEvent(${event.id})">Edit</button>
+                    <button class="btn btn-delete" onclick="deleteEvent(${event.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Create Event';
+        document.getElementById('eventId').value = '';
+        document.getElementById('eventTitle').value = '';
+        document.getElementById('eventDescription').value = '';
+        document.getElementById('eventDate').value = '';
+        document.getElementById('eventLocation').value = '';
+        document.getElementById('eventModal').style.display = 'flex';
+    }
+
+    function closeEventModal() {
+        document.getElementById('eventModal').style.display = 'none';
+    }
+
+    async function saveEvent(e) {
+        e.preventDefault();
+
+        const eventId = document.getElementById('eventId').value;
+        const eventData = {
+    name: document.getElementById('eventTitle').value, // backend expects "name", not "title"
+    description: document.getElementById('eventDescription').value,
+eventDate: document.getElementById('eventDate').value.replace(' ', 'T'),
+
+    location: document.getElementById('eventLocation').value,
+    organizerId: currentUser.id // backend expects organizerId, not an organizer object
+};
+
+
+        try {
+            if (eventId) {
+                await fetch(`${API_URL}/events/${eventId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(eventData)
+                });
+                alert('Event updated successfully!');
+            } else {
+                await fetch(`${API_URL}/events`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(eventData)
+                });
+                alert('Event created successfully! Waiting for admin approval.');
+            }
+
+            closeEventModal();
+            loadEvents();
+        } catch (error) {
+            alert('Failed to save event');
+        }
+    }
+
+    async function editEvent(eventId) {
+        try {
+            const response = await fetch(`${API_URL}/events/${eventId}`);
+            const event = await response.json();
+
+            document.getElementById('modalTitle').textContent = 'Edit Event';
+            document.getElementById('eventId').value = event.id;
+            document.getElementById('eventTitle').value = event.title;
+            document.getElementById('eventDescription').value = event.description;
+            document.getElementById('eventDate').value = event.eventDate.substring(0, 16);
+            document.getElementById('eventLocation').value = event.location;
+            document.getElementById('eventModal').style.display = 'flex';
+        } catch (error) {
+            alert('Failed to load event details');
+        }
+    }
+
+    async function deleteEvent(eventId) {
+        if (!confirm('Are you sure you want to delete this event?')) return;
+
+        try {
+            await fetch(`${API_URL}/events/${eventId}`, { method: 'DELETE' });
+            alert('Event deleted successfully!');
+            loadEvents();
+        } catch (error) {
+            alert('Failed to delete event');
+        }
+    }
+
+    async function viewParticipants(eventId) {
+        currentEventId = eventId;
+        try {
+            const response = await fetch(`${API_URL}/registrations/event/${eventId}`);
+            const registrations = await response.json();
+            displayParticipants(registrations);
+            document.getElementById('participantsModal').style.display = 'flex';
+        } catch (error) {
+            console.error('Error loading participants:', error);
+        }
+    }
+
+    function displayParticipants(registrations) {
+        const container = document.getElementById('participantsList');
+
+        if (registrations.length === 0) {
+            container.innerHTML = '<div class="empty-state">No participants registered yet</div>';
+            return;
+        }
+
+        container.innerHTML = `
+            <table class="participants-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Registered At</th>
+                        <th>Attendance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${registrations.map(reg => `
+                        <tr>
+                            <td>${reg.participant.name}</td>
+                            <td>${reg.participant.email}</td>
+                            <td>${new Date(reg.registeredAt).toLocaleString()}</td>
+                            <td>
+                                <button
+                                    class="attendance-toggle ${reg.attended ? 'present' : 'absent'}"
+                                    onclick="toggleAttendance(${reg.id}, ${!reg.attended})">
+                                    ${reg.attended ? 'Present' : 'Absent'}
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    async function toggleAttendance(registrationId, attended) {
+        try {
+            await fetch(`${API_URL}/registrations/${registrationId}/attendance`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ attended })
+            });
+            viewParticipants(currentEventId);
+        } catch (error) {
+            alert('Failed to update attendance');
+        }
+    }
+
+    function closeParticipantsModal() {
+        document.getElementById('participantsModal').style.display = 'none';
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>

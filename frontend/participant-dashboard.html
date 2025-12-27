@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Participant Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .navbar h1 {
+            font-size: 22px;
+        }
+
+        .navbar .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-logout {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 12px 25px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .event-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .event-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .event-organizer {
+            color: #667eea;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .event-details {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .event-details p {
+            margin-bottom: 5px;
+        }
+
+        .event-description {
+            color: #888;
+            font-size: 13px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-register {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-registered {
+            background: #28a745;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .attendance-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .badge-present {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-absent {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <h1>Participant Dashboard</h1>
+    <div class="user-info">
+        <span id="userName">Participant</span>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('available')">Available Events</button>
+        <button class="tab" onclick="showTab('registered')">My Registrations</button>
+    </div>
+
+    <div id="availableTab" class="section">
+        <h2>Available Events</h2>
+        <div id="availableEvents" class="events-grid"></div>
+    </div>
+
+    <div id="registeredTab" class="section hidden">
+        <h2>My Registrations</h2>
+        <div id="registeredEvents" class="events-grid"></div>
+    </div>
+</div>
+
+<script>
+    const API_URL = 'http://localhost:8080/api';
+    let currentUser = null;
+    let myRegistrations = [];
+
+    window.onload = function() {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.role !== 'PARTICIPANT') {
+            window.location.href = 'index.html';
+            return;
+        }
+        currentUser = user;
+        document.getElementById('userName').textContent = user.name;
+        loadAvailableEvents();
+        loadMyRegistrations();
+    };
+
+    function showTab(tab) {
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+
+        document.getElementById('availableTab').classList.toggle('hidden', tab !== 'available');
+        document.getElementById('registeredTab').classList.toggle('hidden', tab !== 'registered');
+    }
+
+    async function loadAvailableEvents() {
+        try {
+            const response = await fetch(`${API_URL}/events/approved`);
+            const events = await response.json();
+            displayAvailableEvents(events);
+        } catch (error) {
+            console.error('Error loading events:', error);
+        }
+    }
+
+    async function loadMyRegistrations() {
+        try {
+            const response = await fetch(`${API_URL}/registrations/participant/${currentUser.id}/approved`);
+
+            const registrations = await response.json();
+            myRegistrations = registrations;
+            displayRegisteredEvents(registrations);
+        } catch (error) {
+            console.error('Error loading registrations:', error);
+        }
+    }
+
+    function isRegistered(eventId) {
+        return myRegistrations.some(reg => reg.event.id === eventId);
+    }
+
+    function displayAvailableEvents(events) {
+        const container = document.getElementById('availableEvents');
+
+        if (events.length === 0) {
+            container.innerHTML = '<div class="empty-state">No events available at the moment</div>';
+            return;
+        }
+
+        container.innerHTML = events.map(event => {
+            const registered = isRegistered(event.id);
+            return `
+                <div class="event-card">
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-organizer">Organized by ${event.organizer.name}</div>
+                    <div class="event-details">
+                        <p><strong>📅 Date:</strong> ${new Date(event.eventDate).toLocaleString()}</p>
+                        <p><strong>📍 Location:</strong> ${event.location}</p>
+                    </div>
+                    <div class="event-description">${event.description || 'No description available'}</div>
+                    ${registered
+                        ? '<button class="btn btn-registered" disabled>Already Registered</button>'
+                        : `<button class="btn btn-register" onclick="registerForEvent(${event.id})">Register Now</button>`
+                    }
+                </div>
+            `;
+        }).join('');
+    }
+
+    function displayRegisteredEvents(registrations) {
+        const container = document.getElementById('registeredEvents');
+
+        if (registrations.length === 0) {
+            container.innerHTML = '<div class="empty-state">You haven\'t registered for any events yet</div>';
+            return;
+        }
+
+        container.innerHTML = registrations.map(reg => {
+            const event = reg.event;
+            let attendanceBadge = '';
+            const eventPassed = new Date(event.eventDate) < new Date();
+
+            if (eventPassed) {
+                attendanceBadge = reg.attended
+                    ? '<span class="attendance-badge badge-present">✓ Present</span>'
+                    : '<span class="attendance-badge badge-absent">✗ Absent</span>';
+            } else {
+                attendanceBadge = '<span class="attendance-badge badge-pending">Upcoming</span>';
+            }
+
+            return `
+                <div class="event-card">
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-organizer">Organized by ${event.organizer.name}</div>
+                    <div class="event-details">
+                        <p><strong>📅 Date:</strong> ${new Date(event.eventDate).toLocaleString()}</p>
+                        <p><strong>📍 Location:</strong> ${event.location}</p>
+                        <p><strong>✓ Registered:</strong> ${new Date(reg.registeredAt).toLocaleString()}</p>
+                    </div>
+                    <div class="event-description">${event.description || 'No description available'}</div>
+                    ${attendanceBadge}
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function registerForEvent(eventId) {
+        if (!confirm('Do you want to register for this event?')) return;
+
+        try {
+            const response = await fetch(`${API_URL}/registrations`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    eventId: eventId,
+                    participantId: currentUser.id
+                })
+            });
+
+            if (response.ok) {
+                alert('Successfully registered for the event!');
+                loadAvailableEvents();
+                loadMyRegistrations();
+            } else {
+                const error = await response.text();
+                alert(error);
+            }
+        } catch (error) {
+            alert('Failed to register for event');
+        }
+    }
+
+    function logout() {
+        localStorage.removeItem('user');
+        window.location.href = 'index.html';
+    }
+</script>
+</body>
+</html>
